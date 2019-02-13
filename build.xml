@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 工程名 -->
+<project name="qrcode" default="build" basedir=".">
+	<!-- 版本号，生成的jar文件名中带版本号 -->
+	<property name="version" value="1.0" />
+	<!-- 程序发布路径 -->
+	<property name="output" value="build" />
+	<!-- 主函数main的入口类，生成jar必备 -->
+	<property name="MainClass" value="cn.kivensoft.fds.Application"/>
+	<!-- 非src目录下的其它源文件，打包进jar文件 -->
+	<property name="jar.inc" value="README.md"/>
+	<!-- 以上是经常需要变更的配置 -->
+
+	<!-- 路径变量设置 -->
+	<property name="jarfile" value="${output}/${ant.project.name}-${version}.jar" />
+	<property name="src" value="src" />
+	<property name="lib" value="lib" />
+	<property name="bin" value="bin" />
+
+	<!-- 编译选项classpath设置 -->
+	<fileset id="resources" dir="${src}/main/resources" excludes="**/*.java" />
+	<fileset id="lib.jars" dir="${lib}" includes="**/*.jar" />
+	<fileset id="dist.jars" dir="${lib}/runtime" includes="**/*.jar"
+		excludes="junit-4.12.jar"/>
+
+	<path id="compile.classpath">
+		<fileset refid="lib.jars" />
+	</path>
+	<!-- 打包Jar包Class-Path设置 -->
+	<path id="jars.path">
+		<fileset refid="dist.jars"/>
+	</path>
+
+	<!-- 获取当前时间 -->
+	<tstamp>
+		<format property="build.time" pattern="yyyy-MM-dd'T'HH:mm:ssZ"/>
+	</tstamp>
+
+	<!-- 创建编译文件输出路径及部署文件路径 -->
+	<target name="init">
+		<mkdir dir="${bin}" />
+		<mkdir dir="${output}" />
+	</target>
+
+	<!-- 编译java源文件，把不需要编译的非java文件复制到编译目录下 -->
+	<target name="compiler" depends="init">
+		<javac srcdir="${src}" destdir="${bin}" excludes="**/test/**"
+			includeantruntime="on" debug="on" encoding="UTF-8" classpathref="compile.classpath" />
+		<copy todir="${bin}" preservelastmodified="true">
+			<fileset dir="${src}/main/java" excludes="**/*.java"/>
+		</copy>
+		<copy todir="${bin}" preservelastmodified="true">
+			<fileset refid="resources"/>
+		</copy>
+		<echo>java compile use ${java.version}</echo>
+	</target>
+
+	<!-- 打包编译好的class文件进jar包，源文件打包到src目录下 -->
+	<target name="jar" depends="compiler">
+		<delete dir="${output}" includes="${ant.project.name}-*.jar" />
+		<jar destfile="${jarfile}">
+			<!-- 修改缺省主类 -->
+			<manifest>
+				<attribute name="Created-By" value="${ant.version}" />
+				<attribute name="Built-By" value="Kiven Lee" />
+				<attribute name="Build-Jdk" value="${java.version}" />
+				<!--attribute name="Main-Class" value="org.springframework.boot.loader.JarLauncher" /-->
+				<attribute name="Implementation-Title" value="${ant.project.name}" />
+				<attribute name="Implementation-Version" value="${version}" />
+				<attribute name="Implementation-Time" value="${build.time}" />
+			</manifest>
+			<!-- 编译后的目录下的所有文件 -->
+			<fileset dir="${basedir}/${bin}" excludes="test/**"/>
+			<!-- 其它需要包含的文件 -->
+			<!--fileset dir="${basedir}" includes="${jar.inc}"/-->
+		</jar>
+	</target>
+
+	<tstamp>
+		<format property="now" pattern="yyyy-MM-dd HH:mm:ss"/>
+	</tstamp>
+
+	<target name="build" depends="jar">
+		<echo>${ant.project.name} build successful at ${now}</echo>
+	</target>
+</project>
+
+<!-- 
+@echo off
+if "%JAVA_HOME%"=="" set JAVA_HOME=%JRE_HOME%
+for %%i in ("%~dp0@PROJECT_NAME@-*.jar") do set APP_NAME=%%i
+start "" "%JAVA_HOME%\bin\javaw.exe" -jar "%APP_NAME%"
+
+<replaceregexp byline="true">
+	<regexp pattern="[1-9][0-9]{4,}"/>
+	<substitution expression="6356351"/>
+	<fileset file="test.html"/>
+</replaceregexp>
+-->
